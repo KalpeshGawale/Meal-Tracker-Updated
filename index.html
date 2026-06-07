@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MealTracker - Liquid Glass Dashboard</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-color: #06040d;
+      --glass-bg: rgba(18, 14, 33, 0.55);
+      --glass-inner: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-border-active: rgba(168, 85, 247, 0.35);
+      --text-main: #f9fafb;
+      --text-muted: #a1a1aa;
+      --primary-gradient: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      --accent-purple: #a855f7;
+      --accent-pink: #ec4899;
+      --danger: #ef4444;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      padding: 40px 15px;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Blur Blobs */
+    .bg-blur-blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(140px);
+      z-index: -1;
+      opacity: 0.22;
+      pointer-events: none;
+    }
+    
+    .blob-1 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, var(--accent-purple) 0%, #3b82f6 100%);
+      top: -10%;
+      left: -5%;
+    }
+
+    .blob-2 {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, var(--accent-pink) 0%, #6366f1 100%);
+      bottom: -10%;
+      right: -10%;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 950px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 5px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      font-size: 2rem;
+      filter: drop-shadow(0 4px 12px rgba(168, 85, 247, 0.4));
+    }
+
+    .logo-text {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge {
+      background: var(--glass-inner);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px);
+      color: #e9d5ff;
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .badge:hover {
+      border-color: rgba(168, 85, 247, 0.4);
+      background: rgba(168, 85, 247, 0.05);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+    }
+
+    /* Glass Panels */
+    .glass-panel {
+      background-color: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 28px;
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+    }
+
+    /* Date Selector */
+    .date-selector {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 28px;
+      max-width: 260px;
+    }
+
+    .field-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .date-input {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      outline: none;
+      font-family: inherit;
+      color-scheme: dark;
+      transition: all 0.25s ease;
+    }
+
+    .date-input:focus {
+      border-color: var(--glass-border-active);
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+    }
+
+    /* Meals Cards Grid */
+    .meals-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    .meal-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .meal-card:focus-within {
+      border-color: rgba(168, 85, 247, 0.3);
+      box-shadow: 0 10px 25px rgba(168, 85, 247, 0.05);
+    }
+
+    .meal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .meal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    /* Glass Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 52px;
+      height: 26px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 30px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--text-muted);
+      transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+      background: var(--primary-gradient);
+      border-color: transparent;
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.45);
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(26px);
+      background-color: white;
+    }
+
+    .meal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .input-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+
+    .meal-input {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      outline: none;
+      font-family: inherit;
+      transition: all 0.25s ease;
+    }
+
+    .meal-input:focus {
+      border-color: var(--glass-border-active);
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+    }
+
+    /* Liquid Gradient Save Button */
+    .save-btn {
+      background: var(--primary-gradient);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 16px 32px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-radius: 14px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.1s ease, box-shadow 0.25s ease, opacity 0.2s ease;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(168, 85, 247, 0.3);
+    }
+
+    .save-btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -50%;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0) 100%);
+      transform: skewX(-25deg);
+      transition: 0.8s ease;
+    }
+
+    .save-btn:hover::after {
+      left: 125%;
+    }
+
+    .save-btn:hover {
+      box-shadow: 0 12px 30px rgba(168, 85, 247, 0.45);
+      opacity: 0.95;
+    }
+
+    .save-btn:active {
+      transform: scale(0.985);
+    }
+
+    /* Summary Cards */
+    .summary-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .summary-card {
+      background-color: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    }
+
+    .summary-value {
+      font-size: 3.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 4px 12px rgba(168, 85, 247, 0.2));
+    }
+
+    .summary-label {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-align: center;
+    }
+
+    /* Table Glass Styling */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .history-table th {
+      background-color: rgba(255, 255, 255, 0.02);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .history-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 0.95rem;
+      color: var(--text-main);
+    }
+
+    .history-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .date-col {
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-col {
+      text-align: center;
+      width: 110px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+
+    .status-yes {
+      background-color: rgba(16, 185, 129, 0.08);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-no {
+      background-color: rgba(239, 68, 68, 0.08);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    /* Table Action buttons */
+    .action-cell {
+      display: flex;
+      gap: 10px;
+    }
+
+    .view-btn {
+      background-color: rgba(168, 85, 247, 0.08);
+      color: #dfb1ff;
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.8rem;
+      transition: all 0.25s ease;
+    }
+
+    .view-btn:hover {
+      background-color: var(--accent-purple);
+      color: white;
+      box-shadow: 0 4px 12px rgba(168, 85, 247, 0.35);
+    }
+
+    .delete-btn {
+      background-color: rgba(239, 68, 68, 0.08);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.8rem;
+      transition: all 0.25s ease;
+    }
+
+    .delete-btn:hover {
+      background-color: var(--danger);
+      color: white;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+    }
+
+    .empty-message {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 48px 0 !important;
+      font-style: italic;
+    }
+
+    /* Liquid Glass Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(6, 4, 13, 0.65);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background-color: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 32px;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+      transform: translateY(30px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-overlay.show .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 16px;
+      margin-bottom: 22px;
+    }
+
+    .modal-date {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .modal-close {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      font-size: 1.3rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .modal-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .modal-item-title {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .modal-item-text {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--glass-border);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-purple);
+    }
+
+    /* Glow Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--primary-gradient);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 30px;
+      box-shadow: 0 10px 25px rgba(236, 72, 153, 0.3);
+      font-weight: 700;
+      font-size: 0.95rem;
+      z-index: 1000;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .meals-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .summary-section {
+        grid-template-columns: 1fr;
+      }
+      .history-table th, .history-table td {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient blur lights in background -->
+  <div class="bg-blur-blob blob-1"></div>
+  <div class="bg-blur-blob blob-2"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">🍽️</span>
+        <span class="logo-text">MealTracker</span>
+      </div>
+      <button class="badge" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">Daily Tracking</button>
+    </header>
+
+    <!-- Main Entry Glass Panel -->
+    <div class="glass-panel">
+      <!-- Date Selector -->
+      <div class="date-selector">
+        <label for="tracker-date" class="field-label">Select Date</label>
+        <input type="date" id="tracker-date" class="date-input">
+      </div>
+
+      <!-- Meals Selection -->
+      <div class="meals-grid">
+        <!-- Lunch Card -->
+        <div class="meal-card">
+          <div class="meal-header">
+            <span class="meal-title">🌤️ Lunch</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="lunch-consumed">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="meal-body">
+            <label for="lunch-desc" class="input-label">What did you eat?</label>
+            <input type="text" id="lunch-desc" class="meal-input" placeholder="e.g., Dal rice, salad">
+          </div>
+        </div>
+
+        <!-- Dinner Card -->
+        <div class="meal-card">
+          <div class="meal-header">
+            <span class="meal-title">🌙 Dinner</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="dinner-consumed">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="meal-body">
+            <label for="dinner-desc" class="input-label">What did you eat?</label>
+            <input type="text" id="dinner-desc" class="meal-input" placeholder="e.g., Soup, grilled chicken">
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <button id="save-btn" class="save-btn">Save Day</button>
+    </div>
+
+    <!-- Summary Section -->
+    <div class="summary-section">
+      <div class="summary-card">
+        <span class="summary-value" id="total-lunches">0</span>
+        <span class="summary-label">Total Lunches Consumed</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-value" id="total-dinners">0</span>
+        <span class="summary-label">Total Dinners Consumed</span>
+      </div>
+    </div>
+
+    <!-- History Panel -->
+    <div class="glass-panel">
+      <h3 class="panel-title">Meal History</h3>
+      <div class="table-container">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Lunch</th>
+              <th>Dinner</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Pop-up Modal (Liquid Glass style) -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="modal-date" id="modal-title-date">Date</span>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-item">
+        <div class="modal-item-title">🌤️ Lunch Details</div>
+        <div class="modal-item-text" id="modal-lunch-text">-</div>
+      </div>
+      <div class="modal-item">
+        <div class="modal-item-title">🌙 Dinner Details</div>
+        <div class="modal-item-text" id="modal-dinner-text">-</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State management loading from localStorage
+    let logs = JSON.parse(localStorage.getItem('meal_tracker_logs')) || [];
+
+    // DOM Elements
+    const dateInput = document.getElementById('tracker-date');
+    const lunchCheckbox = document.getElementById('lunch-consumed');
+    const dinnerCheckbox = document.getElementById('dinner-consumed');
+    const lunchDescInput = document.getElementById('lunch-desc');
+    const dinnerDescInput = document.getElementById('dinner-desc');
+    const saveBtn = document.getElementById('save-btn');
+    const historyTbody = document.getElementById('history-tbody');
+    const totalLunchesEl = document.getElementById('total-lunches');
+    const totalDinnersEl = document.getElementById('total-dinners');
+
+    // Modal elements
+    const detailModal = document.getElementById('detail-modal');
+    const modalTitleDate = document.getElementById('modal-title-date');
+    const modalLunchText = document.getElementById('modal-lunch-text');
+    const modalDinnerText = document.getElementById('modal-dinner-text');
+
+    // Init Page Date to Local System Date
+    function initDate() {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      let mm = today.getMonth() + 1;
+      let dd = today.getDate();
+      if (dd < 10) dd = '0' + dd;
+      if (mm < 10) mm = '0' + mm;
+      dateInput.value = `${yyyy}-${mm}-${dd}`;
+    }
+
+    // Load data for the selected date
+    function loadDateData(dateStr) {
+      const entry = logs.find(item => item.date === dateStr);
+      if (entry) {
+        lunchCheckbox.checked = !!entry.lunchConsumed;
+        dinnerCheckbox.checked = !!entry.dinnerConsumed;
+        lunchDescInput.value = entry.lunchDesc || '';
+        dinnerDescInput.value = entry.dinnerDesc || '';
+      } else {
+        lunchCheckbox.checked = false;
+        dinnerCheckbox.checked = false;
+        lunchDescInput.value = '';
+        dinnerDescInput.value = '';
+      }
+    }
+
+    // Save and Sync Data
+    function saveCurrentDay() {
+      const dateStr = dateInput.value;
+      if (!dateStr) return;
+
+      const lunchConsumed = lunchCheckbox.checked;
+      const dinnerConsumed = dinnerCheckbox.checked;
+      const lunchDesc = lunchDescInput.value.trim();
+      const dinnerDesc = dinnerDescInput.value.trim();
+
+      const existingIndex = logs.findIndex(item => item.date === dateStr);
+      const newEntry = {
+        date: dateStr,
+        lunchConsumed,
+        dinnerConsumed,
+        lunchDesc,
+        dinnerDesc
+      };
+
+      if (existingIndex !== -1) {
+        logs[existingIndex] = newEntry;
+      } else {
+        logs.push(newEntry);
+      }
+
+      // Sort logs descending by date
+      logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      localStorage.setItem('meal_tracker_logs', JSON.stringify(logs));
+      renderHistory();
+      renderSummary();
+      showToast("Day saved successfully!");
+    }
+
+    // Delete existing entry
+    window.deleteEntry = function(dateStr) {
+      logs = logs.filter(item => item.date !== dateStr);
+      localStorage.setItem('meal_tracker_logs', JSON.stringify(logs));
+      renderHistory();
+      renderSummary();
+      
+      // Reset inputs if active date matches deleted item
+      if (dateInput.value === dateStr) {
+        loadDateData(dateStr);
+      }
+    };
+
+    // View Modal Detail
+    window.viewDetails = function(dateStr) {
+      const entry = logs.find(item => item.date === dateStr);
+      if (!entry) return;
+
+      const dateObj = new Date(entry.date + 'T00:00:00');
+      const formattedDate = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+
+      modalTitleDate.textContent = formattedDate;
+      modalLunchText.textContent = entry.lunchDesc ? entry.lunchDesc : "No details provided.";
+      modalDinnerText.textContent = entry.dinnerDesc ? entry.dinnerDesc : "No details provided.";
+
+      detailModal.classList.add('show');
+    };
+
+    // Close Modal View
+    window.closeModal = function() {
+      detailModal.classList.remove('show');
+    };
+
+    // Close modal if user clicks the overlay background
+    detailModal.addEventListener('click', (e) => {
+      if (e.target === detailModal) {
+        closeModal();
+      }
+    });
+
+    // Render History list into table
+    function renderHistory() {
+      historyTbody.innerHTML = '';
+      if (logs.length === 0) {
+        historyTbody.innerHTML = `<tr><td colspan="4" class="empty-message">No logged days yet. Record a meal above!</td></tr>`;
+        return;
+      }
+
+      logs.forEach(entry => {
+        const tr = document.createElement('tr');
+
+        const dateObj = new Date(entry.date + 'T00:00:00');
+        const formattedDate = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+
+        const lunchStatus = entry.lunchConsumed 
+          ? '<span class="status-badge status-yes">✓</span>' 
+          : '<span class="status-badge status-no">✗</span>';
+        
+        const dinnerStatus = entry.dinnerConsumed 
+          ? '<span class="status-badge status-yes">✓</span>' 
+          : '<span class="status-badge status-no">✗</span>';
+
+        tr.innerHTML = `
+          <td class="date-col">${formattedDate}</td>
+          <td class="status-col">${lunchStatus}</td>
+          <td class="status-col">${dinnerStatus}</td>
+          <td>
+            <div class="action-cell">
+              <button class="view-btn" onclick="viewDetails('${entry.date}')">View</button>
+              <button class="delete-btn" onclick="deleteEntry('${entry.date}')">Delete</button>
+            </div>
+          </td>
+        `;
+        historyTbody.appendChild(tr);
+      });
+    }
+
+    // Calculate Summary totals
+    function renderSummary() {
+      const totalLunches = logs.reduce((acc, curr) => acc + (curr.lunchConsumed ? 1 : 0), 0);
+      const totalDinners = logs.reduce((acc, curr) => acc + (curr.dinnerConsumed ? 1 : 0), 0);
+
+      totalLunchesEl.textContent = totalLunches;
+      totalDinnersEl.textContent = totalDinners;
+    }
+
+    // Brief Toast feedback
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.add('show');
+      }, 100);
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Event Listeners
+    dateInput.addEventListener('change', (e) => {
+      loadDateData(e.target.value);
+    });
+
+    saveBtn.addEventListener('click', saveCurrentDay);
+
+    // Initial load sequences
+    initDate();
+    loadDateData(dateInput.value);
+    renderHistory();
+    renderSummary();
+  </script>
+</body>
+</html>
